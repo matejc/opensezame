@@ -6,6 +6,7 @@
 all: |
   *
   !bootstrap.py
+  !.travis.yml
 
 # No need for this validator currently.
 css: |
