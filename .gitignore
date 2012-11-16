@@ -35,8 +35,11 @@ nosetests.xml
 .pydevproject
 
 # this project specific
+include/
+local/
 src/opensezame/opensezame.json
 src/opensezame/server.crt
 src/opensezame/server.csr
 src/opensezame/server.key
 src/opensezame/server.key.secure
+src/vvv/
