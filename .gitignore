@@ -33,3 +33,10 @@ nosetests.xml
 .mr.developer.cfg
 .project
 .pydevproject
+
+# this project specific
+src/opensezame/opensezame.json
+src/opensezame/server.crt
+src/opensezame/server.csr
+src/opensezame/server.key
+src/opensezame/server.key.secure
