@@ -1,12 +1,13 @@
 language: python
 python:
-  - 2.7
+  - 2.7
 install:
-  - python bootstrap.py
-  - bin/buildout -q
+  - python bootstrap.py
+  - bin/buildout -q
 script:
-  - bin/vvv setup.py
-  - bin/vvv src/opensezame
+  - bin/vvv setup.py
+  - bin/vvv src/opensezame
   - bin/test
 notifications:
-  irc: "irc.sioff.org#kiberpipa"
+  irc:
+    - "irc.sioff.net#kiberpipa"
