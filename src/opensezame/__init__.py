@@ -8,8 +8,6 @@ import os
 import socket
 import ssl
 
-from dostuff import DoStuff
-
 
 END_LINE = "\r\n"
 END_HEADER = END_LINE * 2
@@ -60,7 +58,8 @@ def read_file(relative_path):
 
 prefix = os.path.dirname(get_real_path())
 config = json.load(open(os.path.join(prefix, "opensezame.json")))
-do_stuff = DoStuff()
+plugin = __import__(config["plugin"], fromlist=['DoStuff'])
+do_stuff = plugin.DoStuff()
 
 
 if config["password"] == "changeme":

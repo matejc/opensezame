@@ -7,4 +7,5 @@
     "indexhtml": "templates/index.html",
     "donehtml": "templates/done.html",
     "denyhtml": "templates/deny.html"
+    "plugin": "plugins.dostuff"
 }
