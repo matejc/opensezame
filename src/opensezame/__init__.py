@@ -3,23 +3,16 @@ Author: Matej Cotman
 """
 
 import SocketServer
-import ssl
-import socket
-import os
 import json
-import time
+import os
+import socket
+import ssl
+
+from dostuff import DoStuff
 
 
 END_LINE = "\r\n"
 END_HEADER = END_LINE * 2
-
-
-def turn_on():
-    pass
-
-
-def turn_off():
-    pass
 
 
 def get_real_path():
@@ -61,8 +54,14 @@ def content2dict(data):
     return result
 
 
+def read_file(relative_path):
+    return open(os.path.join(prefix, relative_path)).read()
+
+
 prefix = os.path.dirname(get_real_path())
 config = json.load(open(os.path.join(prefix, "opensezame.json")))
+do_stuff = DoStuff()
+
 
 if config["password"] == "changeme":
     raise Exception("Change the password in 'opensezame.conf' file!")
@@ -76,6 +75,13 @@ class MyTCPHandler(SocketServer.BaseRequestHandler):
     override the handle() method to implement communication to the
     client.
     """
+    def send_200(self, htmldata):
+        self.request.send(
+            "HTTP/1.0 200 OK{0}Content-Type: "
+            "text/html{1}{2}".format(
+                END_LINE, END_HEADER, htmldata
+            )
+        )
 
     def handle(self):
         try:
@@ -91,6 +97,7 @@ class MyTCPHandler(SocketServer.BaseRequestHandler):
                     )
                 )
             )
+            do_stuff.on_error(ex)
         finally:
             self.request.close()
 
@@ -104,7 +111,7 @@ class MyTCPHandler(SocketServer.BaseRequestHandler):
         end = self.data.find(' ', start)
         path = self.data[start:end].lower()
 
-        print "request is from %s at '%s' with '%s'" % (
+        print "request from %s at '%s' with method '%s'" % (
             self.client_address[0],
             path,
             method
@@ -117,40 +124,25 @@ class MyTCPHandler(SocketServer.BaseRequestHandler):
                     "HTTP/1.0 200 OK{0}Content-Type: text/html{1}{2}".format(
                         END_LINE,
                         END_HEADER,
-                        open(config["indexhtml"]).read()
+                        read_file(config["indexhtml"])
                     )
                 )
+                do_stuff.on_index(self)
 
             elif method == 'POST':
                 dcontent = content2dict(self.data)
-                if dcontent["dafuckfield"] == config["password"]:
-                    htmldata = open(config["donehtml"]).read()
-                    turn_on()
-                    time.sleep(0.2)
-                    turn_off()
-                else:
-                    htmldata = open(config["denyhtml"]).read()
-                    time.sleep(2)
 
-                self.request.send(
-                    "HTTP/1.0 200 OK{0}Content-Type: "
-                    "text/html{1}{2}".format(
-                        END_LINE, END_HEADER, htmldata
-                    )
-                )
+                has_access = dcontent["dafuckfield"] == config["password"]
+
+                if has_access:
+                    self.send_200(read_file(config["donehtml"]))
+                    do_stuff.on_access_approved(self)
+                else:
+                    self.send_200(read_file(config["denyhtml"]))
+                    do_stuff.on_access_deny(self)
+
             else:
                 raise Exception("only GET and POST methods available")
-
-#        elif path == "/eks/captcha.png":
-#            if method == "GET":
-#                png_img = open("captcha.png", "rb")
-#                self.request.sendall( "HTTP/1.0 200 OK%sContent-Type: image/jpeg%s%s" % (
-#                                                                                 END_LINE, END_HEADER,
-#                                                                                 png_img.read()
-#                                                                                ) )
-#                png_img.close()
-#            else:
-#                raise Exception("only GET for captcha available")
 
         else:
             raise Exception("url not valid")
