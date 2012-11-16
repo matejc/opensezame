@@ -29,7 +29,3 @@ class DoStuff(object):
     def on_error(self, exception):
         """Called when error occured."""
         traceback.print_exc()
-
-
-
-
