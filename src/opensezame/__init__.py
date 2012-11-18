@@ -64,11 +64,11 @@ class MyTCPHandler(SocketServer.BaseRequestHandler):
     override the handle() method to implement communication to the
     client.
     """
-    def send_200(self, htmldata):
+    def send_response(self, status_code, htmldata):
         self.request.send(
-            "HTTP/1.0 200 OK{0}Content-Type: "
-            "text/html{1}{2}".format(
-                END_LINE, END_HEADER, htmldata
+            "HTTP/1.0 {0} OK{1}Content-Type: "
+            "text/html{2}{3}".format(
+                status_code, END_LINE, END_HEADER, htmldata
             )
         )
 
@@ -121,13 +121,13 @@ class MyTCPHandler(SocketServer.BaseRequestHandler):
             elif method == 'POST':
                 dcontent = content2dict(self.data)
 
-                has_access = dcontent["dafuckfield"] == config["password"]
+                has_access = dcontent["passfield"] == config["password"]
 
                 if has_access:
-                    self.send_200(read_file(config["donehtml"]))
+                    self.send_response("200", read_file(config["donehtml"]))
                     do_stuff.on_access_approved(self)
                 else:
-                    self.send_200(read_file(config["denyhtml"]))
+                    self.send_response("401", read_file(config["denyhtml"]))
                     do_stuff.on_access_deny(self)
 
             else:
