@@ -17,23 +17,23 @@ Actions can be easily added to events:
 Also with customizable templates.
 
 
-development instalation
-=======================
+instalation to virtualenv
+=========================
 
 .. sourcecode:: bash
 
     git clone git@github.com:matejc/opensezame.git
-    virtualenv-2.7 --no-site-packages opensezame
-    cd opensezame
-    source bin/activate
-    python bootstrap.py
-    buildout
+    cp -r opensezame/src/opensezame/example .
+    mv example/ myproject/
+    virtualenv --no-site-packages myproject/
+    cd myproject/
+    bin/pip install ../opensezame/
 
     # copy default configuration
-    cp src/opensezame/opensezame.json.example src/opensezame/opensezame.json
+    cp opensezame.json.example opensezame.json
 
     # change your password
-    vim src/opensezame/opensezame.json
+    vim opensezame.json
 
     # create server key and cert
     openssl genrsa -des3 -out server.key 4096
@@ -44,7 +44,50 @@ development instalation
     openssl x509 -req -days 3650 -in server.csr -signkey server.key -out server.crt
 
     # run the server
-    python src/opensezame/__init__.py
+    opensezame-run
+
+    # in browser:
+    https://localhost:9876/opensezame
+
+
+usage
+=====
+
+.. sourcecode:: bash
+
+    cd /path/to/myproject/ && bin/opensezame-run
+
+
+for developers
+==============
+
+.. sourcecode:: bash
+
+    git clone git@github.com:matejc/opensezame.git
+    virtualenv --no-site-packages opensezame
+    cd opensezame
+    source bin/activate
+    python bootstrap.py
+    buildout
+
+    cd src/opensezame/example/
+
+    # copy default configuration
+    cp opensezame.json.example opensezame.json
+
+    # change your password
+    vim opensezame.json
+
+    # create server key and cert
+    openssl genrsa -des3 -out server.key 4096
+    openssl rsa -in server.key -out server.key.insecure
+    mv server.key server.key.secure
+    mv server.key.insecure server.key
+    openssl req -new -key server.key -out server.csr
+    openssl x509 -req -days 3650 -in server.csr -signkey server.key -out server.crt
+
+    # run the server
+    opensezame-run
 
     # in browser:
     https://localhost:9876/opensezame
