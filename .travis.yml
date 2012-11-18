@@ -9,5 +9,4 @@ script:
   - bin/vvv src/opensezame
   - bin/test
 notifications:
-  irc:
-    - "irc.sioff.net#kiberpipa"
+  irc: "irc.sioff.net#kiberpipa"
