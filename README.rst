@@ -68,6 +68,22 @@ usage
     https://localhost:9876/opensezame
 
 
+api
+===
+
+Here is **curl** command example for triggering server actions.
+
+.. sourcecode:: bash
+
+    curl --silent -o /dev/null --insecure -w "%{http_code}" \
+        --data "passfield=changeme" https://localhost:9876/opensezame
+
+
+It returns string 200 on success,
+401 on access denied
+and 500 on server error.
+
+
 for developers
 ==============
 
