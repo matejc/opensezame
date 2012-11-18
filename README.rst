@@ -29,6 +29,15 @@ instalation to virtualenv
     cd myproject/
     bin/pip install ../opensezame/
 
+
+configuration
+=============
+
+.. sourcecode:: bash
+
+    # change directory to where the opensezame.json and bin folder is
+    cd /path/to/myproject/
+
     # copy default configuration
     cp opensezame.json.example opensezame.json
 
@@ -43,19 +52,20 @@ instalation to virtualenv
     openssl req -new -key server.key -out server.csr
     openssl x509 -req -days 3650 -in server.csr -signkey server.key -out server.crt
 
-    # run the server
-    opensezame-run
-
-    # in browser:
-    https://localhost:9876/opensezame
-
 
 usage
 =====
 
 .. sourcecode:: bash
 
-    cd /path/to/myproject/ && bin/opensezame-run
+    # change directory to where the opensezame.json and bin folder is
+    cd /path/to/myproject/
+
+    # run the server
+    bin/opensezame-run
+
+    # in browser:
+    https://localhost:9876/opensezame
 
 
 for developers
