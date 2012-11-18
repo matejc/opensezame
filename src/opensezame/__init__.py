@@ -7,7 +7,7 @@ import json
 import os
 import socket
 import ssl
-
+import sys
 
 END_LINE = "\r\n"
 END_HEADER = END_LINE * 2
@@ -54,16 +54,6 @@ def content2dict(data):
 
 def read_file(relative_path):
     return open(os.path.join(prefix, relative_path)).read()
-
-
-prefix = os.path.dirname(get_real_path())
-config = json.load(open(os.path.join(prefix, "opensezame.json")))
-plugin = __import__(config["plugin"], fromlist=['DoStuff'])
-do_stuff = plugin.DoStuff()
-
-
-if config["password"] == "changeme":
-    raise Exception("Change the password in 'opensezame.conf' file!")
 
 
 class MyTCPHandler(SocketServer.BaseRequestHandler):
@@ -175,15 +165,44 @@ class MyTCPServer(SocketServer.TCPServer):
         self.allow_reuse_address = True
         SocketServer.TCPServer.server_bind(self)
 
-server = None
-try:
-    # Create the server, binding to host address and port
-    server = MyTCPServer((config["address"], config["port"]), MyTCPHandler)
-    server.serve_forever()
-except KeyboardInterrupt:
-    print "\nUser killed the program!"
 
-finally:
-    if server is not None:
-        server.shutdown()
-    print "Server killed!"
+def main(prefix_arg=None):
+    global prefix, server, config, plugin, do_stuff
+
+    if prefix_arg:
+        prefix = prefix_arg
+    else:
+        prefix = os.getcwd()
+
+    configpath = os.path.join(prefix, "opensezame.json")
+    config = json.load(open(configpath))
+
+    if config["password"] == "changeme":
+        raise Exception("Change the password in 'opensezame.json' file!")
+
+    sys.path.append(prefix)
+    plugin = __import__(config["plugin"], fromlist=['DoStuff'])
+    do_stuff = plugin.DoStuff()
+
+    try:
+        # Create the server, binding to host address and port
+        server = MyTCPServer((config["address"], config["port"]), MyTCPHandler)
+        server.serve_forever()
+    except KeyboardInterrupt:
+        print "\nUser killed the program!"
+
+    finally:
+        if server is not None:
+            server.shutdown()
+        print "Server killed!"
+
+
+prefix = None
+server = None
+config = None
+plugin = None
+do_stuff = None
+
+
+if __name__ == "__main__":
+    main(os.path.dirname(get_real_path()))

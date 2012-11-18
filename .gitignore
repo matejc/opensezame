@@ -37,9 +37,9 @@ nosetests.xml
 # this project specific
 include/
 local/
-src/opensezame/opensezame.json
-src/opensezame/server.crt
-src/opensezame/server.csr
-src/opensezame/server.key
-src/opensezame/server.key.secure
+src/opensezame/example/opensezame.json
+src/opensezame/example/server.crt
+src/opensezame/example/server.csr
+src/opensezame/example/server.key
+src/opensezame/example/server.key.secure
 src/vvv/

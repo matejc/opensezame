@@ -43,4 +43,9 @@ setup(
             'unittest2',
         ],
     },
+    entry_points={
+        'console_scripts': [
+            "opensezame-run = opensezame:main"
+        ]
+    },
 )
