@@ -1,11 +1,7 @@
 {
     "address": "0.0.0.0",
     "port": 9876,
-    "password": "changeme",
     "certfile": "server.crt",
     "keyfile": "server.key",
-    "indexhtml": "templates/index.html",
-    "donehtml": "templates/done.html",
-    "denyhtml": "templates/deny.html"
-    "plugin": "plugins.dostuff"
+    "plugins": ["dostuff"]
 }
