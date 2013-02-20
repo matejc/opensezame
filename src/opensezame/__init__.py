@@ -2,12 +2,15 @@
 Author: Matej Cotman
 """
 
+from iprange import IPv4Range
+
 import SocketServer
 import json
 import os
 import socket
 import ssl
 import sys
+
 
 END_LINE = "\r\n"
 END_HEADER = END_LINE * 2
@@ -56,6 +59,19 @@ def read_file(relative_path):
     return open(os.path.join(prefix, relative_path)).read()
 
 
+def read_template(plugin, template):
+    return read_file(os.path.join("templates", plugin, template))
+
+
+def ip_in_range(ip, ranges):
+    if not ranges:
+        return True
+    for r in ranges:
+        if ip in IPv4Range(r):
+            return True
+    return False
+
+
 class MyTCPHandler(SocketServer.BaseRequestHandler):
     """
     The RequestHandler class for our server.
@@ -74,7 +90,69 @@ class MyTCPHandler(SocketServer.BaseRequestHandler):
 
     def handle(self):
         try:
-            self.handle_try()
+            self.request.settimeout(5)
+            # self.request is the TCP socket connected to the client
+            self.data = self.request.recv(2048)  # , socket.MSG_WAITALL)
+
+            start = self.data.find(' ') + 1
+            method = self.data[:start - 1].upper()
+            end = self.data.find(' ', start)
+            path = self.data[start+1:end].lower()
+
+            print "request from %s at '/%s' with method '%s'" % (
+                self.client_address[0],
+                path,
+                method
+            )
+
+            if path in plugins:
+
+                plugin = plugins[path]
+
+                if method == 'GET':
+                    self.request.send(
+                        "HTTP/1.0 200 OK{0}Content-Type:"
+                        " text/html{1}{2}".format(
+                            END_LINE,
+                            END_HEADER,
+                            read_template(path, "index.html")
+                        )
+                    )
+                    plugin.on_index(self)
+
+                elif method == 'POST':
+                    dcontent = content2dict(self.data)
+
+                    if plugin.PASSWORD:
+                        pass_confirmed = \
+                            dcontent["passfield"] == plugin.PASSWORD
+                    else:
+                        pass_confirmed = True
+
+                    in_range = ip_in_range(
+                        self.client_address[0],
+                        plugin.ALLOW_IP_RANGES
+                    )
+
+                    if pass_confirmed and in_range:
+                        self.send_response(
+                            "200",
+                            read_template(path, "done.html")
+                        )
+                        plugin.on_access_approved(self)
+                    else:
+                        self.send_response(
+                            "401",
+                            read_template(path, "deny.html")
+                        )
+                        plugin.on_access_deny(self)
+
+                else:
+                    raise Exception("only GET and POST methods available")
+
+            else:
+                raise Exception("url not valid")
+
         except Exception as ex:
             self.request.sendall(
                 "HTTP/1.0 500 Internal Server Error"
@@ -86,55 +164,10 @@ class MyTCPHandler(SocketServer.BaseRequestHandler):
                     )
                 )
             )
-            do_stuff.on_error(ex)
+            if path in plugins:
+                plugins[path].on_error(ex)
         finally:
             self.request.close()
-
-    def handle_try(self):
-        self.request.settimeout(5)
-        # self.request is the TCP socket connected to the client
-        self.data = self.request.recv(2048)  # , socket.MSG_WAITALL)
-
-        start = self.data.find(' ') + 1
-        method = self.data[:start - 1].upper()
-        end = self.data.find(' ', start)
-        path = self.data[start:end].lower()
-
-        print "request from %s at '%s' with method '%s'" % (
-            self.client_address[0],
-            path,
-            method
-        )
-
-        if path == '/opensezame':
-
-            if method == 'GET':
-                self.request.send(
-                    "HTTP/1.0 200 OK{0}Content-Type: text/html{1}{2}".format(
-                        END_LINE,
-                        END_HEADER,
-                        read_file(config["indexhtml"])
-                    )
-                )
-                do_stuff.on_index(self)
-
-            elif method == 'POST':
-                dcontent = content2dict(self.data)
-
-                has_access = dcontent["passfield"] == config["password"]
-
-                if has_access:
-                    self.send_response("200", read_file(config["donehtml"]))
-                    do_stuff.on_access_approved(self)
-                else:
-                    self.send_response("401", read_file(config["denyhtml"]))
-                    do_stuff.on_access_deny(self)
-
-            else:
-                raise Exception("only GET and POST methods available")
-
-        else:
-            raise Exception("url not valid")
 
 
 class MyTCPServer(SocketServer.TCPServer):
@@ -150,12 +183,15 @@ class MyTCPServer(SocketServer.TCPServer):
         SocketServer.BaseServer.__init__(
             self, server_address, RequestHandlerClass
         )
-        self.socket = ssl.wrap_socket(
-            socket.socket(self.address_family, self.socket_type),
-            server_side=True,
-            certfile=os.path.join(prefix, config["certfile"]),
-            keyfile=os.path.join(prefix, config["keyfile"])
-        )
+        if "certfile" in config and "keyfile" in config:
+            self.socket = ssl.wrap_socket(
+                socket.socket(self.address_family, self.socket_type),
+                server_side=True,
+                certfile=os.path.join(prefix, config["certfile"]),
+                keyfile=os.path.join(prefix, config["keyfile"])
+            )
+        else:
+            self.socket = socket.socket(self.address_family, self.socket_type)
 
         if bind_and_activate:
             self.server_bind()
@@ -167,7 +203,7 @@ class MyTCPServer(SocketServer.TCPServer):
 
 
 def main(prefix_arg=None):
-    global prefix, server, config, plugin, do_stuff
+    global prefix, server, config, plugin, plugins
 
     if prefix_arg:
         prefix = prefix_arg
@@ -177,12 +213,14 @@ def main(prefix_arg=None):
     configpath = os.path.join(prefix, "opensezame.json")
     config = json.load(open(configpath))
 
-    if config["password"] == "changeme":
-        raise Exception("Change the password in 'opensezame.json' file!")
-
     sys.path.append(prefix)
-    plugin = __import__(config["plugin"], fromlist=['DoStuff'])
-    do_stuff = plugin.DoStuff()
+
+    for p in config["plugins"]:
+        plugin = __import__(
+            "plugins.{0}".format(p),
+            fromlist=['DoStuff']
+        ).DoStuff()
+        plugins[p] = plugin
 
     try:
         # Create the server, binding to host address and port
@@ -201,7 +239,7 @@ prefix = None
 server = None
 config = None
 plugin = None
-do_stuff = None
+plugins = {}
 
 
 if __name__ == "__main__":
