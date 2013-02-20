@@ -97,7 +97,7 @@ class MyTCPHandler(SocketServer.BaseRequestHandler):
             start = self.data.find(' ') + 1
             method = self.data[:start - 1].upper()
             end = self.data.find(' ', start)
-            path = self.data[start+1:end].lower()
+            path = self.data[start + 1:end].lower()
 
             print "request from %s at '/%s' with method '%s'" % (
                 self.client_address[0],
