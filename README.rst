@@ -38,10 +38,7 @@ configuration
     # change directory to where the opensezame.json and bin folder is
     cd /path/to/myproject/
 
-    # copy default configuration
-    cp opensezame.json.example opensezame.json
-
-    # change your password
+    # edit default configuration if needed
     vim opensezame.json
 
     # create server key and cert
