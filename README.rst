@@ -12,9 +12,9 @@ Actions can be easily added to events:
     - on index page loaded,
     - on successful entry,
     - on access denied,
-    - and more ...
+    - on exception
 
-Also with customizable templates.
+Also with customizable templates per each plugin.
 
 
 instalation to virtualenv
@@ -23,11 +23,32 @@ instalation to virtualenv
 .. sourcecode:: bash
 
     git clone git@github.com:matejc/opensezame.git
+
+    # copy over example project
     cp -r opensezame/src/opensezame/example .
     mv example/ myproject/
+
+    # install virtualenv and opensezame into project folder
     virtualenv --no-site-packages myproject/
     cd myproject/
     bin/pip install ../opensezame/
+
+
+upgrade in virtualenv
+=====================
+
+.. sourcecode:: bash
+
+    # cd to local repository
+    cd /path/to/opensezame
+
+    git pull
+
+    # cd to project
+    cd /path/to/myproject
+
+    # do actual upgrade
+    /path/to/myproject/bin/pip install --upgrade /path/to/opensezame/
 
 
 configuration
@@ -42,12 +63,23 @@ configuration
     vim opensezame.json
 
     # create server key and cert
-    openssl genrsa -des3 -out server.key 4096
-    openssl rsa -in server.key -out server.key.insecure
-    mv server.key server.key.secure
-    mv server.key.insecure server.key
-    openssl req -new -key server.key -out server.csr
-    openssl x509 -req -days 3650 -in server.csr -signkey server.key -out server.crt
+    openssl req -new -newkey rsa:4096 -days 3650 -nodes -x509 -keyout server.key -out server.crt
+
+
+writing plugins
+===============
+
+    example plugins are in plugins/ folder
+    example templates are in templates/ folder
+
+    to create new plugin::
+
+        cp plugins/dostuff.py plugins/myplugin.py
+        cp -r templates/dostuff templates/myplugin
+
+        and activate plugin by editing entry *plugins* in *opensezame.json*::
+
+            "plugins": ["dostuff", "mplayer", "myplugin"]
 
 
 usage
@@ -62,7 +94,7 @@ usage
     bin/opensezame-run
 
     # in browser:
-    https://localhost:9876/opensezame
+    https://localhost:9876/myplugin
 
 
 api
@@ -73,7 +105,7 @@ Here is **curl** command example for triggering server actions.
 .. sourcecode:: bash
 
     curl --silent -o /dev/null --insecure -w "%{http_code}" \
-        --data "passfield=changeme" https://localhost:9876/opensezame
+        --data "passfield=changeme" https://localhost:9876/myplugin
 
 
 It returns string 200 on success,
@@ -102,15 +134,10 @@ for developers
     vim opensezame.json
 
     # create server key and cert
-    openssl genrsa -des3 -out server.key 4096
-    openssl rsa -in server.key -out server.key.insecure
-    mv server.key server.key.secure
-    mv server.key.insecure server.key
-    openssl req -new -key server.key -out server.csr
-    openssl x509 -req -days 3650 -in server.csr -signkey server.key -out server.crt
+    openssl req -new -newkey rsa:4096 -days 3650 -nodes -x509 -keyout server.key -out server.crt
 
     # run the server
     opensezame-run
 
     # in browser:
-    https://localhost:9876/opensezame
+    https://localhost:9876/dostuff
