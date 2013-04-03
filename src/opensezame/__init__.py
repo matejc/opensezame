@@ -83,8 +83,8 @@ class MyTCPHandler(SocketServer.BaseRequestHandler):
     def send_response(self, status_code, htmldata):
         self.request.send(
             "HTTP/1.0 {0} OK{1}Content-Type: "
-            "text/html{2}{3}{4}".format(
-                status_code, END_LINE, END_HEADER, htmldata, END_LINE
+            "text/html{2}{3}".format(
+                status_code, END_LINE, END_HEADER, htmldata
             )
         )
         self.request.close()
