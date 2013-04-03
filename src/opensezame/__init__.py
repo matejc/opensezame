@@ -83,10 +83,11 @@ class MyTCPHandler(SocketServer.BaseRequestHandler):
     def send_response(self, status_code, htmldata):
         self.request.send(
             "HTTP/1.0 {0} OK{1}Content-Type: "
-            "text/html{2}{3}".format(
-                status_code, END_LINE, END_HEADER, htmldata
+            "text/html{2}{3}{4}".format(
+                status_code, END_LINE, END_HEADER, htmldata, END_LINE
             )
         )
+        self.request.close()
 
     def handle(self):
         try:
@@ -121,11 +122,11 @@ class MyTCPHandler(SocketServer.BaseRequestHandler):
                     plugin.on_index(self)
 
                 elif method == 'POST':
-                    dcontent = content2dict(self.data)
+                    self.dcontent = content2dict(self.data)
 
                     if plugin.PASSWORD:
                         pass_confirmed = \
-                            dcontent["passfield"] == plugin.PASSWORD
+                            self.dcontent["passfield"] == plugin.PASSWORD
                     else:
                         pass_confirmed = True
 
@@ -180,8 +181,8 @@ class MyTCPServer(SocketServer.TCPServer):
     ):
         # See SocketServer.TCPServer.__init__
         # (added ssl-support):
-        SocketServer.BaseServer.__init__(
-            self, server_address, RequestHandlerClass
+        SocketServer.TCPServer.__init__(
+            self, server_address, RequestHandlerClass, False
         )
         if "certfile" in config and "keyfile" in config:
             self.socket = ssl.wrap_socket(
@@ -230,9 +231,12 @@ def main(prefix_arg=None):
         print "\nUser killed the program!"
 
     finally:
+        for plugin in plugins:
+            plugins[plugin].shutdown()
         if server is not None:
             server.shutdown()
-        print "Server killed!"
+            server.server_close()
+        print "Server killed! ({0})".format(os.getpid())
 
 
 prefix = None

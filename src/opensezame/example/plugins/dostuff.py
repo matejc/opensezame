@@ -30,5 +30,9 @@ class DoStuff(object):
         )
 
     def on_error(self, exception):
-        """Called when error occured."""
+        """Called when error occurred."""
         traceback.print_exc()
+
+    def shutdown(self):
+        """Called when opensezame server is shuting down."""
+        print "Plugin is shutting down."
