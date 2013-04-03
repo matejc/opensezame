@@ -19,11 +19,12 @@ class DoStuff(object):
         print "User with {0} has been GRANTED access.".format(
             handler.client_address[0]
         )
+        value = handler.dcontent.get("value")
 
         command = handler.dcontent.get("command")
         if command == "start":
             self.popen = subprocess.Popen(
-                ["/usr/bin/mplayer", "http://80.94.69.106:6324/"],
+                ["/usr/bin/mplayer", value if value else "http://80.94.69.106:6324/"],
                 stdout=self.fnull,
                 stderr=self.fnull,
                 stdin=self.fnull,
@@ -37,14 +38,14 @@ class DoStuff(object):
                 self.popen = None
         elif command == "increase":
             subprocess.call(
-                ["amixer", "sset", "Master", "10%+"],
+                ["amixer", "sset", "Master", "{0}%+".format(value if value else '10')],
                 stdout=self.fnull,
                 stderr=self.fnull,
                 stdin=self.fnull,
             )
         elif command == "decrease":
             subprocess.call(
-                ["amixer", "sset", "Master", "10%-"],
+                ["amixer", "sset", "Master", "{0}%-".format(value if value else '10')],
                 stdout=self.fnull,
                 stderr=self.fnull,
                 stdin=self.fnull,
@@ -77,5 +78,3 @@ class DoStuff(object):
                 self.popen.pid
             )
             os.killpg(self.popen.pid, signal.SIGTERM)
-
-# curl --silent -o /dev/null --insecure -w "%{http_code}" --data "command=test" https://localhost:9876/mplayer
