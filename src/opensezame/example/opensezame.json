@@ -3,5 +3,5 @@
     "port": 9876,
     "certfile": "server.crt",
     "keyfile": "server.key",
-    "plugins": ["dostuff"]
+    "plugins": ["dostuff", "mplayer"]
 }
