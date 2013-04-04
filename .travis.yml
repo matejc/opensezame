@@ -8,5 +8,4 @@ script:
   - bin/vvv setup.py
   - bin/vvv src/opensezame
   - bin/test
-notifications:
-  irc: "irc.sioff.net#kiberpipa"
+
