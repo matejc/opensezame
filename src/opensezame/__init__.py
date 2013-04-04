@@ -191,8 +191,10 @@ class MyTCPServer(SocketServer.TCPServer):
                 certfile=os.path.join(prefix, config["certfile"]),
                 keyfile=os.path.join(prefix, config["keyfile"])
             )
+            self.isssl = True
         else:
             self.socket = socket.socket(self.address_family, self.socket_type)
+            self.isssl = False
 
         if bind_and_activate:
             self.server_bind()
@@ -201,6 +203,16 @@ class MyTCPServer(SocketServer.TCPServer):
     def server_bind(self):
         self.allow_reuse_address = True
         SocketServer.TCPServer.server_bind(self)
+
+
+def selftest(config):
+    print "Running basic self tests ..."
+    assert config["address"]
+    assert config["port"]
+    if "certfile" in config and "keyfile" in config:
+        assert os.path.exists(os.path.join(prefix, config["certfile"]))
+        assert os.path.exists(os.path.join(prefix, config["keyfile"]))
+    assert config["plugins"]
 
 
 def main(prefix_arg=None):
@@ -214,6 +226,8 @@ def main(prefix_arg=None):
     configpath = os.path.join(prefix, "opensezame.json")
     config = json.load(open(configpath))
 
+    selftest(config)
+
     sys.path.append(prefix)
 
     for p in config["plugins"]:
@@ -226,6 +240,11 @@ def main(prefix_arg=None):
     try:
         # Create the server, binding to host address and port
         server = MyTCPServer((config["address"], config["port"]), MyTCPHandler)
+        print "Server running: http{0}://{1}:{2}/".format(
+            "s" if server.isssl else "",
+            "127.0.0.1" if config["address"] == "0.0.0.0" else config["address"],
+            config["port"]
+        )
         server.serve_forever()
     except KeyboardInterrupt:
         print "\nUser killed the program!"
