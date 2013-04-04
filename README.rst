@@ -12,7 +12,8 @@ Actions can be easily added to events:
     - on index page loaded,
     - on successful entry,
     - on access denied,
-    - on exception
+    - on exception,
+    - on shutdown
 
 Also with customizable templates per each plugin.
 
@@ -24,14 +25,14 @@ instalation to virtualenv
 
     git clone git@github.com:matejc/opensezame.git
 
-    # copy over example project
-    cp -r opensezame/src/opensezame/example .
-    mv example/ myproject/
-
     # install virtualenv and opensezame into project folder
     virtualenv --no-site-packages myproject/
     cd myproject/
     bin/pip install ../opensezame/
+
+    # create your project
+    bin/opensezame-init .
+
 
 
 upgrade in virtualenv
@@ -48,7 +49,7 @@ upgrade in virtualenv
     cd /path/to/myproject
 
     # do actual upgrade
-    /path/to/myproject/bin/pip install --upgrade /path/to/opensezame/
+    bin/pip install --upgrade /path/to/opensezame/
 
 
 configuration
@@ -126,9 +127,6 @@ for developers
     buildout
 
     cd src/opensezame/example/
-
-    # copy default configuration
-    cp opensezame.json.example opensezame.json
 
     # change your password
     vim opensezame.json
