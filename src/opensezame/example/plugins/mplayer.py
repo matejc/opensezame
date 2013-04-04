@@ -1,4 +1,6 @@
 
+from urllib2 import urlopen
+
 import subprocess
 import time
 import traceback
@@ -23,33 +25,53 @@ class DoStuff(object):
 
         command = handler.dcontent.get("command")
         if command == "start":
-            self.popen = subprocess.Popen(
-                ["/usr/bin/mplayer", value if value else "http://80.94.69.106:6324/"],
-                stdout=self.fnull,
-                stderr=self.fnull,
-                stdin=self.fnull,
-                preexec_fn=os.setsid
-            )
-            print "command: '{0}' - pid: {1}".format(command, self.popen.pid)
+            try:
+                # test if url is valid
+                urlopen(value)
+            except:
+                print "command: '{0}' with value '{1}' is invalid".format(command, value)
+            else:
+                self.popen = subprocess.Popen(
+                    ["/usr/bin/mplayer", value],
+                    stdout=self.fnull,
+                    stderr=self.fnull,
+                    stdin=self.fnull,
+                    preexec_fn=os.setsid
+                )
+                print "command: '{0}' - pid: {1}".format(command, self.popen.pid)
         elif command == "stop":
             if self.popen:
                 print "command: '{0}' - killing pid: {1} ...".format(command, self.popen.pid)
                 os.killpg(self.popen.pid, signal.SIGTERM)
                 self.popen = None
+
         elif command == "increase":
-            subprocess.call(
-                ["amixer", "sset", "Master", "{0}%+".format(value if value else '10')],
-                stdout=self.fnull,
-                stderr=self.fnull,
-                stdin=self.fnull,
-            )
+            try:
+                # test if integer is valid
+                int(value)
+            except:
+                print "command: '{0}' with value '{1}' is invalid".format(command, value)
+            else:
+                subprocess.call(
+                    ["amixer", "sset", "Master", "{0}%+".format(value)],
+                    stdout=self.fnull,
+                    stderr=self.fnull,
+                    stdin=self.fnull,
+                )
+
         elif command == "decrease":
-            subprocess.call(
-                ["amixer", "sset", "Master", "{0}%-".format(value if value else '10')],
-                stdout=self.fnull,
-                stderr=self.fnull,
-                stdin=self.fnull,
-            )
+            try:
+                # test if integer is valid
+                int(value)
+            except:
+                print "command: '{0}' with value '{1}' is invalid".format(command, value)
+            else:
+                subprocess.call(
+                    ["amixer", "sset", "Master", "{0}%-".format(value)],
+                    stdout=self.fnull,
+                    stderr=self.fnull,
+                    stdin=self.fnull,
+                )
         else:
             print "command: '{0}' - sleeping...".format(command)
             time.sleep(1)
