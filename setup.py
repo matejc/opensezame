@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """Installer for this package."""
 
-from setuptools import find_packages
 from setuptools import setup
 
 import os
@@ -29,9 +28,16 @@ setup(
     author_email='matejc@kiberpipa.org',
     url='https://github.com/matejc/opensezame',
     license='GNU GPL',
-    packages=find_packages('src', exclude=['ez_setup']),
-    package_dir={'': 'src'},
+    packages=['opensezame'],
+    package_dir={'opensezame': 'src/opensezame'},
     include_package_data=True,
+    package_data={
+        'opensezame': [
+            'example/opensezame.json',
+            'example/plugins/*.py',
+            'example/templates/*/*.html'
+        ]
+    },
     zip_safe=False,
     install_requires=[
         'setuptools',
@@ -45,7 +51,8 @@ setup(
     },
     entry_points={
         'console_scripts': [
-            "opensezame-run = opensezame:main"
+            "opensezame-run = opensezame:main",
+            "opensezame-init = opensezame.entrypoints:init"
         ]
     },
 )
